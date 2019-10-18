@@ -105,10 +105,77 @@ public class ProgrammingAssignment2
 //        String arffAllFeatures = csvToArff(csvDataAllFeatures, featuresAllFeatures);
 //        double accuracyAllFeatures = classify(arffAllFeatures, 1);
 //        System.out.println("Accuracy of using All Features "  + accuracyAllFeatures);
-        
+		
+		
+		/*
+		 * Part 4 - Find best features
+		 */
+		
+		//find best features for decision tree classifer
+		findBestFeatures(12, 1);
+		
+		/*
+		 * Part 5 - Compare Classifiers
+		 */
+		
+		//Use Random Forest classifier
+		findBestFeatures(12, 2);
+		
+		//Use SVM classifer
+		findBestFeatures(12, 3);
 	}
 	
 
+    private static int[] findBestFeatures(int numFeatures, int clNumber) throws Exception
+    {
+
+    	
+//    	find the classification accuracies for each of the features individually
+    	String[][] csvDataWindow3 = readCSV("featuresWindow3.csv");
+    	for (int i = 0; i < numFeatures; i++) {
+			String arffDataWindow3 = csvToArff(csvDataWindow3, new int[] {i});
+        	double accuracyWindow3 = classify(arffDataWindow3, clNumber);
+    		System.out.println("Accuracy with just feature " + i + " is " + accuracyWindow3);
+    	}
+    	ArrayList<Integer> features = new ArrayList<>();
+    	Set<Integer> left = new HashSet<>();
+    	for (int i  =  0; i < 12; i++) {
+    		left.add(i);
+    	}
+    	double lastAcc = -1;
+    	for(int i = 0; i < numFeatures; i++)
+    	{
+        	int best = -1;
+        	double accuracy=-1;
+    		int[] featureArr = new int[i+1];
+    		for (int j=0; j < featureArr.length - 1; j++) {
+    			featureArr[j] = features.get(j);	
+    		}
+    		for (int feature : left) {
+    			featureArr[i] = feature;
+    			String arffDataWindow3 = csvToArff(csvDataWindow3, featureArr);
+            	double accuracyWindow3 = classify(arffDataWindow3, clNumber);
+            	if (accuracyWindow3 > accuracy) {
+            		best = feature;
+            		accuracy = accuracyWindow3;
+            	}
+    		}
+    		features.add(best);
+    		Collections.sort(features);
+    		left.remove(best);
+    		System.out.println("Current feature set: Size: " + (i + 1) + " " + features.toString());
+    		System.out.println("Current accuracy: " + accuracy);
+    		if (accuracy < lastAcc + 1) {
+    			break;
+    		}
+    		lastAcc = accuracy;
+    	}
+		int[] featureArr = new int[features.size()];
+		for (int j=0; j < featureArr.length; j++) {
+			featureArr[j] = features.get(j);	
+		}
+		return featureArr;
+    }
 	
 	public static void getFeatures(String finalOutputFilename, int slidingWindow)
 	{
@@ -470,23 +537,23 @@ public class ProgrammingAssignment2
 		eval.crossValidateModel(classifier, instances, 10, new Random(1));
 		
 		
-		if (option==1)
-		{
-	        final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Tree Visualizer: J48");
-	        jf.setSize(500,400);
-	        jf.getContentPane().setLayout(new BorderLayout());
-	        TreeVisualizer tv = new TreeVisualizer(null, ((J48) classifier).graph(), new PlaceNode2());
-	        jf.getContentPane().add(tv, BorderLayout.CENTER);
-	        jf.addWindowListener(new java.awt.event.WindowAdapter() {
-	        public void windowClosing(java.awt.event.WindowEvent e) {
-	        	jf.dispose();
-	        }
-	        });
-	
-	        jf.setVisible(true);
-	        tv.fitToScreen();
-        
-		}
+//		if (option==1)
+//		{
+//	        final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Tree Visualizer: J48");
+//	        jf.setSize(500,400);
+//	        jf.getContentPane().setLayout(new BorderLayout());
+//	        TreeVisualizer tv = new TreeVisualizer(null, ((J48) classifier).graph(), new PlaceNode2());
+//	        jf.getContentPane().add(tv, BorderLayout.CENTER);
+//	        jf.addWindowListener(new java.awt.event.WindowAdapter() {
+//	        public void windowClosing(java.awt.event.WindowEvent e) {
+//	        	jf.dispose();
+//	        }
+//	        });
+//	
+//	        jf.setVisible(true);
+//	        tv.fitToScreen();
+//        
+//		}
 		
 		return eval.pctCorrect();
 	}
@@ -546,39 +613,6 @@ public class ProgrammingAssignment2
     	}
     }
 
-    private static int[] findBestFeatures(int numFeatures) throws Exception
-    {
-//    	find the classification accuracies for each of the features individually
-    	String[][] csvDataWindow3 = readCSV("featuresWindow3.csv");
-    	ArrayList<Integer> features = new ArrayList<>();
-    	Set<Integer> left = new HashSet<>();
-    	for(int i = 0; i < numFeatures; i++)
-    	{
-        	int best = -1;
-        	double accuracy=-1;
-    		int[] featureArr = new int[i+1];
-    		for (int j=0; j < featureArr.length; j++) {
-    			featureArr[j] = features.get(j);	
-    		}
-    		for (int feature : left) {
-    			featureArr[i] = feature;
-    			String arffDataWindow3 = csvToArff(csvDataWindow3, featureArr);
-            	double accuracyWindow3 = classify(arffDataWindow3, 1);
-            	if (accuracyWindow3 > accuracy) {
-            		best = i;
-            		accuracy = accuracyWindow3;
-            	}
-    		}
-    		features.add(best);
-    		left.remove(best);
-    		System.out.println("Current feature set: Size: " + (i + 1) + " " + features.toString());
-    		System.out.println("Current accuracy: " + accuracy);
-    	}
-		int[] featureArr = new int[numFeatures];
-		for (int j=0; j < featureArr.length; j++) {
-			featureArr[j] = features.get(j);	
-		}
-		return featureArr;
-    }
+
 
 }
