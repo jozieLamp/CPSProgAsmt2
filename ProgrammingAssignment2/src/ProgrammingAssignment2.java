@@ -9,7 +9,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -464,7 +467,7 @@ public class ProgrammingAssignment2
 		classifier.buildClassifier(instances); // build classifier
 		
 		Evaluation eval = new Evaluation(instances);
-		eval.crossValidateModel(classifier, instances, 10, new Random(1), new Object[] { });
+		eval.crossValidateModel(classifier, instances, 10, new Random(1));
 		
 		
 		if (option==1)
@@ -543,15 +546,39 @@ public class ProgrammingAssignment2
     	}
     }
 
-    private static int[] findBestFeatures(int numFeatures)
+    private static int[] findBestFeatures(int numFeatures) throws Exception
     {
-    	int[] featureList = new int[numFeatures];
-    	//find the classification accuracies for each of the features individually
-    	
+//    	find the classification accuracies for each of the features individually
+    	String[][] csvDataWindow3 = readCSV("featuresWindow3.csv");
+    	ArrayList<Integer> features = new ArrayList<>();
+    	Set<Integer> left = new HashSet<>();
     	for(int i = 0; i < numFeatures; i++)
     	{
-    		
+        	int best = -1;
+        	double accuracy=-1;
+    		int[] featureArr = new int[i+1];
+    		for (int j=0; j < featureArr.length; j++) {
+    			featureArr[j] = features.get(j);	
+    		}
+    		for (int feature : left) {
+    			featureArr[i] = feature;
+    			String arffDataWindow3 = csvToArff(csvDataWindow3, featureArr);
+            	double accuracyWindow3 = classify(arffDataWindow3, 1);
+            	if (accuracyWindow3 > accuracy) {
+            		best = i;
+            		accuracy = accuracyWindow3;
+            	}
+    		}
+    		features.add(best);
+    		left.remove(best);
+    		System.out.println("Current feature set: Size: " + (i + 1) + " " + features.toString());
+    		System.out.println("Current accuracy: " + accuracy);
     	}
+		int[] featureArr = new int[numFeatures];
+		for (int j=0; j < featureArr.length; j++) {
+			featureArr[j] = features.get(j);	
+		}
+		return featureArr;
     }
 
 }
